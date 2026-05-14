@@ -1,0 +1,21 @@
+
+> cross-connect-dashboard@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+ ⚠ Port 3002 is in use, trying 3003 instead.
+ ⚠ Port 3003 is in use, trying 3004 instead.
+ ⚠ Port 3004 is in use, trying 3005 instead.
+ ⚠ Port 3005 is in use, trying 3006 instead.
+ ⚠ Port 3006 is in use, trying 3007 instead.
+  ▲ Next.js 14.2.0
+  - Local:        http://localhost:3007
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 10.7s (1461 modules)
+ GET / 200 in 11830ms
+ ✓ Compiled in 1126ms (722 modules)

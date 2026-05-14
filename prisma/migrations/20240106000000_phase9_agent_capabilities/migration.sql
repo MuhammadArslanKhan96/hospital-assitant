@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Agent" ADD COLUMN "type" TEXT NOT NULL DEFAULT 'INBOUND';
+ALTER TABLE "Agent" ADD COLUMN "transferTargets" TEXT;

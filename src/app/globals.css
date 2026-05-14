@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  @apply text-slate-900 bg-slate-50 antialiased;
+}
+
+@layer base {
+  /* Enforce Light Mode inputs globally to prevent dark mode issues */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply text-slate-900 bg-white border-slate-300 placeholder-slate-400 focus:border-vc-green focus:ring-vc-green;
+  }
+
+  /* Scrollbar Styling for a more premium feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-300;
+  }
+}
+
+@layer components {
+  /* Common Button Styles */
+  .btn-primary {
+    @apply inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-slate-900 border border-transparent rounded-lg shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-vc-green transition-all;
+  }
+
+  .btn-secondary {
+    @apply inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-vc-green transition-all;
+  }
+
+  .btn-danger {
+    @apply inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all;
+  }
+
+  /* Common Card Style */
+  .premium-card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden;
+  }
+}

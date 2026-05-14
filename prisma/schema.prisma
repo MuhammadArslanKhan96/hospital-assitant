@@ -1,0 +1,242 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  role             String    @default("TENANT") // SUPER_ADMIN or TENANT
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  tenant           Tenant?
+  createdAt        DateTime  @default(now())
+}
+
+model Tenant {
+  id          String @id @default(cuid())
+  name        String
+  markup      Float  @default(1.2)
+  billingMode String @default("FALLBACK") // "REAL" or "FALLBACK"
+  timezone    String @default("UTC")
+  user        User   @relation(fields: [userId], references: [id])
+  userId      String @unique
+
+  agents       Agent[]
+  calls        CallLog[]
+  appointments Appointment[]
+  customTools  Tool[]
+  toolCalls    ToolCall[]
+  contacts     Contact[]
+
+  // Deprecated
+  vapiAssistantId   String?
+  vapiPhoneNumberId String?
+  systemPrompt      String?
+  voiceId           String?
+  model             String?
+  apiKey            String?
+
+  createdAt DateTime @default(now())
+}
+
+model Agent {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  name     String
+
+  type String @default("INBOUND")
+
+  vapiAssistantId String? @unique
+  systemPrompt    String  @default("You are a helpful assistant.")
+  voiceId         String  @default("sarah")
+  model           String  @default("gpt-4o")
+
+  // Voice Controls
+  firstMessage    String? @default("Hello, how can I help you?")
+  backgroundSound String? @default("off") // off, office, cafe
+
+  temperature        Float?  @default(0.7)
+  speed              Float?  @default(1.0)
+  emotion            Float?  @default(0.667)
+  stability          Float?  @default(0.8)
+  clarity            Float?  @default(0.75)
+  reasoningMode      Boolean @default(false)
+  longTermMemory     Boolean @default(false)
+  transcriberEnabled Boolean @default(true)
+
+  // Orchestration Settings
+  fillerInjectionEnabled Boolean? @default(true)
+  backchannelingEnabled  Boolean? @default(true)
+  interruptionThreshold  Float?   @default(0.1)
+  silenceTimeout         Float?   @default(0.4)
+
+  voicemailHandling String? // Custom prompt instructions for voicemail encounters
+
+  tools           String?
+  transferTargets String?
+
+  phoneNumber PhoneNumber?
+  calls       CallLog[]
+  contacts    Contact[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isBilingual Boolean @default(false)
+  
+  // Protocol Injections
+  enableTimeContext        Boolean @default(true)
+  enableSchedulingProtocol Boolean @default(true)
+  enableComplianceProtocol Boolean @default(true)
+  enableCallerId           Boolean @default(true)
+
+  // Call Limits & Silence Handling
+  maxDurationSeconds             Int     @default(600)
+  silenceTimeoutSeconds          Int     @default(30)
+  endCallOnSilenceTimeoutEnabled Boolean @default(true)
+  enableSilenceReengagement      Boolean @default(true)
+  silenceMessage                 String  @default("Are you still there?")
+  maxMessages                    Int     @default(20)
+}
+
+model Tool {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  name         String
+  description  String
+  parameters   String
+  actionType   String   @default("EMAIL") // "EMAIL" or "WEBHOOK"
+  actionTarget String   // The email address or the webhook URL
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  calls        ToolCall[]
+
+  @@unique([tenantId, name])
+}
+
+model ToolCall {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  toolId         String
+  tool           Tool     @relation(fields: [toolId], references: [id])
+  customerNumber String?
+  data           String   // JSON string storing the arguments passed by the AI
+  createdAt      DateTime @default(now())
+}
+
+model PhoneNumber {
+  id       String  @id @default(cuid())
+  number   String  @unique
+  vapiId   String? @unique
+  agentId  String? @unique
+  agent    Agent?  @relation(fields: [agentId], references: [id])
+  tenantId String?
+
+  status      String    @default("ACTIVE")
+  activatedAt DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model CallLog {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  agentId             String?
+  agent               Agent?   @relation(fields: [agentId], references: [id])
+  vapiCallId          String?
+  status              String
+  duration            Int      @default(0)
+  summary             String?
+  recordingUrl        String?
+  transcript          String?
+  cost                Float    @default(0.0)
+  billedCost          Float    @default(0.0)
+  customerNumber      String?
+  disconnectionReason String?
+  transferTarget      String?
+  outcome             String? // JSON string storing details if booked or lead captured
+  createdAt           DateTime @default(now())
+}
+
+model Appointment {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+  startTime     DateTime
+  endTime       DateTime
+  timezone      String?
+  status        String   @default("pending")
+  purpose       String?
+  extraDetails  String?  // JSON string for overridden specialized parameters
+  createdAt     DateTime @default(now())
+}
+
+model Contact {
+  id              String   @id @default(cuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  agentId         String?
+  agent           Agent?   @relation(fields: [agentId], references: [id])
+  phoneNumber     String
+  smsConsent      Boolean  @default(false)
+  doNotCall       Boolean  @default(false)
+  lastCallContext String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, phoneNumber])
+}
+
+// New Model for Dynamic Catalog
+model ProviderModel {
+  id          String   @id @default(cuid())
+  type        String // "model" or "voice" or "transcriber"
+  name        String // "GPT-4o (Standard)"
+  value       String // "gpt-4o"
+  provider    String // "openai"
+  costPerUnit Float    @default(0.0) // Cost per minute/token/call
+  isEnabled   Boolean  @default(true) // If visible to tenants
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([type, value]) // Avoid duplicates
+}
+
+model ContactRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  message   String
+  status    String   @default("NEW") // "NEW", "REVIEWED", "RESPONDED"
+  createdAt DateTime @default(now())
+}
+
+model DemoAgentConfig {
+  id              String   @id @default("global")
+  vapiAssistantId String?
+  name            String   @default("Marketing Demo Agent")
+  systemPrompt    String   @default("You are a helpful AI assistant for VirtualCall.AI.")
+  voiceId         String   @default("sarah")
+  model           String   @default("gpt-4o")
+  firstMessage    String?  @default("Hello! I am the VirtualCall.AI demo agent. How can I help you today?")
+  isActive        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

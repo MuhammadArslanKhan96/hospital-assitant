@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Agent" ADD COLUMN     "clarity" DOUBLE PRECISION DEFAULT 0.75;
